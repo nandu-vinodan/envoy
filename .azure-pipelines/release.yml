@@ -1,4 +1,4 @@
-# Only triggers on build completion
+# Only triggers on build completion, the build completion trigger have to be set from AZP UI.
 trigger: none
 pr: none
 
@@ -10,11 +10,25 @@ jobs:
   - task: DownloadPipelineArtifact@2
     inputs:
       buildType: specific
-      specificBuildWithTriggering: true
-      project: $(Build.TriggeredBy.ProjectID)
-      pipelineId: $(Build.TriggeredBy.DefinitionId)
-      artifactName: bazel.release
+      project: $(System.TeamProjectId)
+      definition: $(Build.TriggeredBy.DefinitionId)
+      buildVersionToDownload: 'specific'
+      buildId: $(Build.TriggeredBy.BuildId)
+      artifactName: "bazel.release"
       targetPath: $(Build.StagingDirectory)/release
 
   - bash: |
-      find $(Build.StagingDirectory)/release
+      mkdir -p $(Build.SourcesDirectory)/build_release
+      cp $(Build.StagingDirectory)/release/source/exe/envoy $(Build.SourcesDirectory)/build_release/envoy
+
+      mkdir $(Build.SourcesDirectory)/build_release_stripped
+      strip $(Build.StagingDirectory)/release/source/exe/envoy -o $(Build.SourcesDirectory)/build_release_stripped/envoy
+
+      ci/docker_build.sh
+      ci/docker_push.sh
+    env:
+      DOCKER_IMAGE_PREFIX: lizan/envoy-azp
+      CIRCLE_BRANCH: master
+      CIRCLE_SHA1: $(Build.SourceVersion)
+      DOCKERHUB_USERNAME: $(DockerUsername)
+      DOCKERHUB_PASSWORD: $(DockerPassword)
