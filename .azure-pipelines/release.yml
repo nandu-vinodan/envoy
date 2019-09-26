@@ -13,7 +13,8 @@ jobs:
       project: $(System.TeamProjectId)
       definition: $(Build.TriggeredBy.DefinitionId)
       buildVersionToDownload: 'specific'
-      buildId: $(Build.TriggeredBy.BuildId)
+      #buildId: $(Build.TriggeredBy.BuildId)
+      buildId: 12254
       artifactName: "bazel.release"
       targetPath: $(Build.StagingDirectory)/release
 
